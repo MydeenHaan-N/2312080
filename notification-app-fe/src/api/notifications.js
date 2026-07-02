@@ -40,9 +40,21 @@ async function getAccessToken() {
   return cachedToken;
 }
 
-export async function fetchNotifications() {
+function buildUrl({ page = 1, limit = 10, notificationType = "" } = {}) {
+  const url = new URL(API_URL);
+  url.searchParams.set("page", String(page));
+  url.searchParams.set("limit", String(limit));
+
+  if (notificationType) {
+    url.searchParams.set("notification_type", notificationType);
+  }
+
+  return url.toString();
+}
+
+export async function fetchNotifications(options = {}) {
   const token = await getAccessToken();
-  const response = await fetch(API_URL, {
+  const response = await fetch(buildUrl(options), {
     method: "GET",
     headers: {
       Accept: "application/json",

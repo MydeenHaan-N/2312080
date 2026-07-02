@@ -510,3 +510,35 @@ We do not keep unnecessary data on the screen.
 
 
                   Stage 6 ends here.
+
+## Stage 7
+
+In this stage I updated the frontend app from the previous developer work and made it simple.
+The app now has two views, one for all notifications and one for priority notifications.
+
+The notification API is called with limit, page, and notification_type query parameters.
+The page changes when the user clicks next or previous.
+The limit can also be changed from the page.
+
+Priority notifications are shown first based on the type order.
+Placement is kept above Result and Result is kept above Event.
+
+To show the difference between new and already viewed notifications, I used local storage in the frontend.
+When a student clicks a notification, it is saved as viewed.
+If it is not in local storage, it is shown as new.
+
+The UI is kept simple and uses only native HTML and CSS.
+It works on desktop and mobile because the layout changes to a single column on small screens.
+
+The app runs on localhost:3000.
+
+Files changed for this stage
+
+notification-app-fe/src/api/notifications.js
+notification-app-fe/src/hooks/useNotifications.js
+notification-app-fe/src/pages/NotificationsPage.jsx
+notification-app-fe/src/App.jsx
+notification-app-fe/src/App.css
+notification-app-fe/vite.config.js
+
+              Stage 7 ends here.
