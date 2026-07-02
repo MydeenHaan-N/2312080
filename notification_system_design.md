@@ -143,3 +143,167 @@ Assumptions
 User is already logged in.
 Notifications are shown in latest first order.
 All responses are in JSON format.
+
+                        Stage 1 ends here.
+
+## Stage 2
+
+Database Choice
+
+I would suggest MySQL for this notification system.
+
+Reason
+It is simple to use, supports SQL queries properly, and is good for structured data like notifications, users, status, timestamp, and type.
+It is also easier to keep data consistent when we need to mark a notification as read or fetch unread notifications.
+
+Database Schema
+
+Table name: notifications
+
+id
+uuid
+primary key
+
+user_id
+uuid
+not null
+
+type
+varchar(30)
+not null
+
+message
+text
+not null
+
+status
+varchar(20)
+default unread
+
+created_at
+timestamp
+default current_timestamp
+
+read_at
+timestamp
+nullable
+
+target_url
+text
+nullable
+
+priority
+varchar(20)
+nullable
+
+Indexes
+
+Create index on user_id
+Create index on status
+Create index on created_at
+
+SQL Table Query
+
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY,
+  user_id UUID NOT NULL,
+  type VARCHAR(30) NOT NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  read_at TIMESTAMP NULL,
+  target_url TEXT NULL,
+  priority VARCHAR(20) NULL
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_status ON notifications(status);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at);
+
+Problems when data increases
+
+1. Fetching notifications may become slow if the table grows too much.
+2. Unread count query may take more time.
+3. Insert and update operations can increase a lot.
+4. Old notifications will keep piling up and make the table large.
+
+Solutions
+
+1. Use proper indexes on user_id, status, and created_at.
+2. Use pagination with limit and offset or cursor based pagination.
+3. Archive old notifications after some time.
+4. Use partitioning if the table becomes very large.
+5. Cache unread count in Redis if needed(I alraedy used this in my old projects).
+
+SQL Queries Based on APIs
+
+1. Get all notifications
+
+SELECT id, type, message, status, created_at, read_at, target_url, priority
+FROM notifications
+WHERE user_id = 'user-id-here'
+ORDER BY created_at DESC
+LIMIT 20;
+
+2. Get unread notifications
+
+SELECT id, type, message, created_at
+FROM notifications
+WHERE user_id = 'user-id-here' AND status = 'unread'
+ORDER BY created_at DESC;
+
+3. Get unread count
+
+SELECT COUNT(*) AS unread_count
+FROM notifications
+WHERE user_id = 'user-id-here' AND status = 'unread';
+
+4. Mark one notification as read
+
+UPDATE notifications
+SET status = 'read',
+    read_at = CURRENT_TIMESTAMP
+WHERE id = 'notification-id-here' AND user_id = 'user-id-here';
+
+5. Delete notification
+
+DELETE FROM notifications
+WHERE id = 'notification-id-here' AND user_id = 'user-id-here';
+
+6. Create notification
+
+INSERT INTO notifications (id, user_id, type, message, status, created_at, target_url, priority)
+VALUES (
+  'new-notification-id',
+  'user-id-here',
+  'Result',
+  'project review',
+  'unread',
+  CURRENT_TIMESTAMP,
+  '/results/123',
+  'normal'
+);
+
+How it connects with REST APIs
+
+GET /notifications
+This will use the first SELECT query.
+
+GET /notifications/unread
+This will use the unread notifications query.
+
+PATCH /notifications/:id/read
+This will use the UPDATE query.
+
+DELETE /notifications/:id
+This will use the DELETE query.
+
+POST /notifications
+This will use the INSERT query.
+
+NoSQL option
+
+If the system becomes very large in future, MongoDB can also be used.
+But for this stage, MySQL is better because the data is simple and structured.
+
+                      Stage 2 ends here.
