@@ -362,3 +362,50 @@ WHERE n.notificationType = 'Placement'
 AND n.createdAt >= NOW() - INTERVAL 7 DAY;
 
                             Stage 3 ends here.
+
+## Stage 4
+
+The problem is that notifications are being fetched again and again on every page load.
+This creates too many database hits and makes the app slow for students.
+
+The best solution is to use caching for notification data and unread count.
+
+What I would suggest
+
+1. Keep the latest notification list in cache for a short time.
+2. Keep unread count in cache so the badge can load faster.
+3. Fetch fresh data from the database only when needed.
+4. Use pagination so we do not load all notifications at once.
+5. If possible, fetch notifications once after login and then refresh only when a new notification comes.
+
+How this improves performance
+
+Caching reduces repeated database queries.
+Pagination reduces the amount of data sent in one response.
+Lazy loading makes the page faster on the first load.
+This gives a better user experience for students.
+
+Tradeoffs
+
+Caching
+It is fast, but the data may become old if not updated properly.
+
+Pagination
+It reduces load, but the user may need to click more to see older notifications.
+
+Lazy loading
+It improves first load time, but more requests may be needed later.
+
+Database indexing
+It helps fetch data faster, but too many indexes can slow down inserts and updates.
+
+My final choice
+
+I would use cache plus pagination.
+Cache the unread count and recent notifications.
+Use pagination for the full list.
+This is simple and works well for a notification system.
+
+                        Stage 4 ends here.
+
+
