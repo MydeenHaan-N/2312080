@@ -144,7 +144,7 @@ User is already logged in.
 Notifications are shown in latest first order.
 All responses are in JSON format.
 
-                        Stage 1 ends here.
+                         Stage 1 ends here.
 
 ## Stage 2
 
@@ -306,4 +306,59 @@ NoSQL option
 If the system becomes very large in future, MongoDB can also be used.
 But for this stage, MySQL is better because the data is simple and structured.
 
-                      Stage 2 ends here.
+                            Stage 2 ends here.
+
+## Stage 3
+
+The query is not fully accurate for a large table because it can become slow.
+
+SELECT * reads all columns, so it takes more time than needed.
+WHERE studentID = 1042 AND isRead = false becomes expensive if the table is large and there is no proper index.
+ORDER BY createdAt ASC also adds extra work because the database may need to sort many rows.
+
+This is slow mainly because of full table scan and sorting.
+If the table has 50,000 students and 5,00,000 notifications, the database may check a lot of rows before giving the result.
+
+I would change the query to return only the needed columns and add a proper index.
+
+Better query
+
+SELECT id, studentID, notificationType, message, createdAt
+FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt DESC;
+
+Best index for this query
+
+CREATE INDEX idx_notifications_student_read_created
+ON notifications (studentID, isRead, createdAt);
+
+Adding index on every column is not a good idea.
+It will increase storage and slow down insert, update, and delete operations.
+So we should add only useful indexes based on the common queries.
+
+If the same unread query is used very often, a composite index is better than many single column indexes.
+
+Likely computation cost
+
+Without index, the cost is high because the database may scan the whole table.
+With a proper composite index, the query becomes much faster.
+
+Query to find all students who got a placement notification in the last 7 days
+
+SELECT DISTINCT studentID
+FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL 7 DAY;
+
+If student names are needed, we can join the students table with notifications.
+
+Example
+
+SELECT DISTINCT s.studentID, s.name
+FROM students s
+JOIN notifications n ON s.studentID = n.studentID
+WHERE n.notificationType = 'Placement'
+AND n.createdAt >= NOW() - INTERVAL 7 DAY;
+
+                            Stage 3 ends here.
