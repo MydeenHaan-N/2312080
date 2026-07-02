@@ -408,4 +408,59 @@ This is simple and works well for a notification system.
 
                         Stage 4 ends here.
 
+## Stage 5
+
+The main issue in this implementation is that if one email fails in the middle, the whole process may become slow and some students may not get the notification properly.
+
+It is better not to send email and save notification in a fully blocking way for all 50,000 students.
+
+Revised pseudocode
+
+function notify_all(student_ids, message):
+    for student_id in student_ids:
+        save_to_db(student_id, message)
+        queue_email(student_id, message)
+        queue_in_app_notification(student_id, message)
+
+    return "Notification request accepted"
+
+What is wrong in the first approach
+
+1. send_email can fail in the middle.
+2. If one call fails, the rest may get delayed.
+3. Doing everything one by one is slow for 50,000 students.
+4. The user has to wait too long for the request to finish.
+
+Better design
+
+I would separate the work into background jobs.
+The main request should only accept the notify all request and put the work in a queue.
+Then worker jobs can send emails and push in-app notifications one by one.
+
+Should saving to DB and sending email happen together
+
+No, I do not think both should be done in the same blocking flow.
+Saving to DB should happen first or at least be queued safely.
+Email sending can happen after that through a worker.
+This is more reliable because if email fails, the notification record is still there.
+
+If send_email fails for 200 students
+
+I would log those failed student IDs and retry them later.
+The failed ones should not stop the remaining students from getting the notification.
+
+How to make it fast and reliable
+
+1. Use a queue for background processing.
+2. Process students in batches.
+3. Retry failed email jobs.
+4. Keep in-app notification separate from email sending.
+5. Return success after the job is accepted, not after all emails are sent.
+
+Final idea
+
+The best approach is async processing with queue and retry.
+This is faster, more reliable, and better for a large number of students.
+
+                      Stage 5 ends here.
 
