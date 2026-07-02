@@ -1,20 +1,30 @@
-import { useState, useEffect } from "react";
-import { fetchNotifications } from "../apis/notifications";
+import { useEffect, useState } from "react";
+import { fetchNotifications } from "../api/notifications";
+import { buildPriorityInbox } from "../utils/priorityInbox";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function load() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await fetchNotifications();
+      const inbox = buildPriorityInbox(data.notifications ?? data.data ?? [], 10);
+      setNotifications(inbox);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load notifications");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    const load = async () => {
-      const data = await fetchNotifications();
-      setNotifications(data.notifications ?? []);
-    };
-
     load();
-  }, [notifications]);
+  }, []);
 
-  const totalPages = 0;
-
-  return { notifications, total, totalPages, loading: false, error: true };
+  return { notifications, loading, error, refresh: load };
 }

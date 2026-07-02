@@ -462,5 +462,51 @@ Final idea
 The best approach is async processing with queue and retry.
 This is faster, more reliable, and better for a large number of students.
 
-                      Stage 5 ends here.
+                  Stage 5 ends here.
 
+## Stage 6
+
+For this stage I used the provided notification API directly.
+I did not store notifications in a database and I did not hard code any notification data.
+
+Before fetching notifications, the app first calls the auth endpoint at /evaluation-service/auth using the given student details and gets a bearer token.
+Then the same token is used in the Authorization header for the notification request.
+
+The code is added in the frontend and it fetches the notifications from the API.
+Then it keeps only the top 10 notifications using priority order.
+
+Priority order used
+
+Placement first
+Result second
+Event third
+
+Inside the same type, the newest notification comes first.
+Unread notifications are shown before read ones if the field is available.
+
+How the top 10 is maintained
+
+1. Fetch the full response from the API.
+2. Convert the response into a normal notification shape.
+3. Sort by priority and recency.
+4. Keep only the first 10 items.
+
+This is simple and works well for the current stage.
+If new notifications keep coming, the list can be refreshed and the same sorting logic can be used again.
+
+Actual code files used
+
+notification-app-fe/src/api/notifications.js
+notification-app-fe/src/utils/priorityInbox.js
+notification-app-fe/src/hooks/useNotifications.js
+notification-app-fe/src/pages/NotificationsPage.jsx
+notification-app-fe/src/components/NotificationCard.jsx
+
+Why this is efficient enough
+
+The list is small because only top 10 items are shown.
+Sorting a small list is fast.
+We do not keep unnecessary data on the screen.
+
+
+                  Stage 6 ends here.
